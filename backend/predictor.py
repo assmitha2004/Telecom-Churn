@@ -42,6 +42,7 @@ class ChurnModel:
         self.intercept = a["intercept"]
         self.defaults = a["defaults"]
         self.key_features = a["key_features"]
+        self.input_rules = {f["name"]: f for f in self.key_features}
         self.presets = a["presets"]
         self.metrics = a["metrics"]
         self.roc = a["roc"]
@@ -103,6 +104,20 @@ class ChurnModel:
                 raise PredictionError(f"'{name}' must be a finite number.")
             if abs(number) > 1e9:
                 raise PredictionError(f"'{name}' is too large.")
+            rule = self.input_rules.get(name)
+            if rule is not None:
+                if number < rule["min"] or number > rule["max"]:
+                    raise PredictionError(
+                        f"{rule['label']} must be between {rule['min']} and {rule['max']}."
+                    )
+                integer_features = {
+                    "monthly_2g_8", "monthly_3g_8", "monthly_2g_6",
+                    "sachet_2g_8", "total_rech_num_8", "monthly_2g_7"
+                }
+                if name in integer_features and not number.is_integer():
+                    raise PredictionError(f"{rule['label']} must be a whole number.")
+                if name not in integer_features and round(number, 2) != number:
+                    raise PredictionError(f"{rule['label']} can have at most 2 decimal places.")
             values[name] = number
             provided.append(name)
 
