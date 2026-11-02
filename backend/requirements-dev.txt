@@ -1,0 +1,3 @@
+# Needed to run the API tests (pytest backend/tests)
+-r ../requirements.txt
+pytest>=8.0

@@ -1,0 +1,18 @@
+# Dependencies and builds
+node_modules/
+frontend/dist/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Secrets
+.env
+.env.*
+
+# Large dataset (download it separately, see README)
+backend/data/*.csv
+
+# Vercel
+.vercel/

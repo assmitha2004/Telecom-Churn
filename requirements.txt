@@ -1,0 +1,3 @@
+# Runtime requirements (used by Vercel and for running the API locally).
+# The API needs only Flask, because the model is stored as plain numbers in backend/artifacts/model.json.
+flask>=3.0,<4
