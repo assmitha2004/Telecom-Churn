@@ -52,7 +52,7 @@ DATA_PATH = os.path.join(HERE, "data", "telecom_churn_data.csv")
 OUT_PATH = os.path.join(HERE, "artifacts", "model.json")
 
 RANDOM_STATE = 42
-N_KEY_FEATURES = 12  # number of inputs shown on the Predict page
+N_KEY_FEATURES = 11  # number of user-facing inputs shown on the Predict page
 
 # ----------------------------------------------------------------------------
 # Human readable names for the columns
@@ -290,6 +290,10 @@ def main():
     corr = X[top_candidates].corr().abs()
     chosen = []
     for col in top_candidates:
+        # Keep the form focused on fields a telecom operator can reasonably ask a user to provide.
+        # Special incoming minutes is a tiny, niche field and is left at its dataset median.
+        if col == "spl_ic_mou_8":
+            continue
         if all(corr.loc[col, other] < 0.8 for other in chosen):
             chosen.append(col)
         if len(chosen) == N_KEY_FEATURES:
