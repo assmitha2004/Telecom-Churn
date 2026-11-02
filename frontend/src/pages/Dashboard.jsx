@@ -14,7 +14,7 @@ export default function Dashboard() {
     { label: 'Raw Dataset Records', value: stats.total_records.toLocaleString(), cls: 'accent' },
     { label: 'High-Value Cohort (Top 30%)', value: stats.high_value_customers.toLocaleString(), cls: 'cyan' },
     { label: 'Churn Rate in High-Value Cohort', value: `${stats.churn_rate}%`, cls: 'red' },
-    { label: 'Model Input Features', value: stats.feature_count.toLocaleString(), cls: 'accent' },
+    { label: 'Engineered Model Features', value: stats.feature_count.toLocaleString(), cls: 'accent' },
     { label: 'Test ROC-AUC', value: metrics.auc.toFixed(4), cls: 'green' },
     { label: 'Test Recall (Churners Caught)', value: pct(metrics.test.sensitivity), cls: 'amber' },
   ];
