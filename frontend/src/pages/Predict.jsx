@@ -53,10 +53,20 @@ function PredictForm({ schema }) {
   };
 
   const run = async vals => {
-    const issue = validate(vals);
+    // Normalize decimal inputs before validation and prediction. Model-derived
+    // feature ranges can contain more precision than the form accepts.
+    const normalized = Object.fromEntries(Object.entries(vals).map(([key, value]) => {
+      if (value === '' || value === null || value === undefined) return [key, value];
+      const number = Number(value);
+      if (!Number.isFinite(number) || INTEGER_INPUTS.has(key)) return [key, value];
+      return [key, Number(number.toFixed(2)).toString()];
+    }));
+    setValues(normalized);
+
+    const issue = validate(normalized);
     if (issue) { setResult(null); setProblem(issue); return; }
     const payload = {};
-    for (const [k, v] of Object.entries(vals)) if (v !== '' && v !== null) payload[k] = Number(v);
+    for (const [k, v] of Object.entries(normalized)) if (v !== '' && v !== null) payload[k] = Number(v);
     setLoading(true);
     setProblem(null);
     try {
@@ -124,7 +134,7 @@ function PredictForm({ schema }) {
                         placeholder={whole ? 'Enter whole number' : 'Enter value'}
                         value={values[name]}
                         onChange={e => { setValues(v => ({ ...v, [name]: e.target.value })); setProblem(null); }} />
-                      <div className="range">{HELP[name]} {whole ? 'Enter a whole number.' : 'Use minutes or rupees as applicable; up to 2 decimal places.'}</div>
+                      <div className="range">{HELP[name]} {whole ? 'Enter a whole number.' : 'Use minutes or rupees as applicable. Extra decimal places are rounded to 2 when predicting.'}</div>
                       <div className="range">Allowed range: 0 to {max}</div>
                     </div>
                   );
