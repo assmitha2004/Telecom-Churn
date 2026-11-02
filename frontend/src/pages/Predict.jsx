@@ -3,6 +3,24 @@ import api from '../services/api';
 import useFetch from '../hooks/useFetch';
 import { Gate } from '../components/Status';
 
+const HIDDEN_INPUTS = new Set(['spl_ic_mou_8']);
+const INTEGER_INPUTS = new Set([
+  'monthly_2g_8', 'monthly_3g_8', 'monthly_2g_6',
+  'sachet_2g_8', 'total_rech_num_8', 'monthly_2g_7'
+]);
+const HELP = {
+  monthly_2g_8: 'Number of monthly 2G packs purchased in August.',
+  monthly_3g_8: 'Number of monthly 3G packs purchased in August.',
+  total_ic_mou_8: 'Total incoming call time during August.',
+  monthly_2g_6: 'Number of monthly 2G packs purchased in June.',
+  sachet_2g_8: 'Number of short-validity 2G packs purchased in August.',
+  loc_ic_t2m_mou_8: 'Incoming local-call minutes from other mobile networks.',
+  total_rech_num_8: 'Number of separate recharge transactions in August.',
+  loc_og_t2m_mou_8: 'Outgoing local-call minutes to other mobile networks.',
+  loc_og_mou_8: 'Total local outgoing call time during August.',
+  monthly_2g_7: 'Number of monthly 2G packs purchased in July.',
+  arpu_8: 'Average revenue generated per customer in August.'
+};
 const emptyValues = features => Object.fromEntries(features.map(f => [f.name, '']));
 
 export default function Predict() {
@@ -13,15 +31,30 @@ export default function Predict() {
 }
 
 function PredictForm({ schema }) {
-  const features = schema.key_features;
+  const features = schema.key_features.filter(f => !HIDDEN_INPUTS.has(f.name));
   const [values, setValues] = useState(() => emptyValues(features));
   const [activePreset, setActivePreset] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [problem, setProblem] = useState(null);
 
-  // Send only the fields the user filled in. Empty fields use the typical value on the server.
-  const run = async (vals) => {
+  const validate = vals => {
+    for (const f of features) {
+      const raw = vals[f.name];
+      if (raw === '' || raw === null || raw === undefined) continue;
+      const n = Number(raw);
+      if (!Number.isFinite(n)) return `${f.label}: enter a valid number.`;
+      if (n < 0) return `${f.label}: negative values are not allowed.`;
+      if (n < f.min || n > f.max) return `${f.label}: enter a value between ${f.min} and ${f.max}.`;
+      if (INTEGER_INPUTS.has(f.name) && !Number.isInteger(n)) return `${f.label}: enter a whole number.`;
+      if (!INTEGER_INPUTS.has(f.name) && Math.round(n * 100) !== n * 100) return `${f.label}: use up to 2 decimal places.`;
+    }
+    return null;
+  };
+
+  const run = async vals => {
+    const issue = validate(vals);
+    if (issue) { setResult(null); setProblem(issue); return; }
     const payload = {};
     for (const [k, v] of Object.entries(vals)) if (v !== '' && v !== null) payload[k] = Number(v);
     setLoading(true);
@@ -35,69 +68,75 @@ function PredictForm({ schema }) {
     }
     setLoading(false);
   };
-
-  const handleSubmit = (e) => { e.preventDefault(); setActivePreset(null); run(values); };
-
-  const loadPreset = (preset) => {
+  const handleSubmit = e => { e.preventDefault(); setActivePreset(null); run(values); };
+  const loadPreset = preset => {
     const filled = Object.fromEntries(features.map(f => [f.name, String(preset.values[f.name] ?? '')]));
     setValues(filled);
     setActivePreset(preset.id);
     run(filled);
   };
-
-  const clear = () => { setValues(emptyValues(features)); setActivePreset(null); setResult(null); setProblem(null); };
-
+  const clear = () => {
+    setValues(emptyValues(features));
+    setActivePreset(null);
+    setResult(null);
+    setProblem(null);
+  };
+  const groups = [
+    { title: 'Recharge & Data Packs', names: ['monthly_2g_8','monthly_3g_8','monthly_2g_6','sachet_2g_8','monthly_2g_7'] },
+    { title: 'Incoming Calls', names: ['total_ic_mou_8','loc_ic_t2m_mou_8'] },
+    { title: 'Outgoing Calls', names: ['loc_og_t2m_mou_8','loc_og_mou_8'] },
+    { title: 'Recharge & Spending', names: ['total_rech_num_8','arpu_8'] }
+  ];
   return (
     <>
-      <h1 className="page-title">Predict Churn</h1>
-
+      <h1 className="page-title">Customer Churn Prediction</h1>
       <div className="card" style={{ marginBottom: 24 }}>
-        <div className="card-title">Start with an example</div>
+        <div className="card-title">Try a sample customer</div>
         <div className="chips">
           {schema.presets.map(p => (
             <button key={p.id} type="button" className={`chip ${activePreset === p.id ? 'on' : ''}`}
-              onClick={() => loadPreset(p)} title={p.description}>
-              {p.label}
-            </button>
+              onClick={() => loadPreset(p)} title={p.description}>{p.label}</button>
           ))}
         </div>
-        <p className="hint">Examples use real median values from the data. Click one, then change any field.</p>
+        <p className="hint">Choose an example to fill the form with sample customer data. You can edit it before predicting.</p>
       </div>
-
       <div className="card">
-        <div className="card-title">Customer Features</div>
+        <div className="card-title">Customer Usage Details</div>
         <p className="body-text" style={{ marginBottom: 16 }}>
-          These are the {features.length} features chosen by the model as most useful (months: Jun, Jul, Aug).
-          Leave a field empty to use the typical customer value. The other {schema.total_features - features.length} features
-          always use typical values.
+          Enter information from the customer's telecom usage or billing records for June, July and August.
+          Leave a field blank to use the model's typical customer value. Other model inputs are automatically set to typical values.
         </p>
-        <form onSubmit={handleSubmit}>
-          <div className="form-grid">
-            {features.map(f => (
-              <div className="field" key={f.name}>
-                <label htmlFor={f.name}>{f.label}</label>
-                {f.binary ? (
-                  <select id={f.name} value={values[f.name]}
-                    onChange={e => setValues(v => ({ ...v, [f.name]: e.target.value }))}>
-                    <option value="">Typical ({f.default})</option>
-                    <option value="0">No</option>
-                    <option value="1">Yes</option>
-                  </select>
-                ) : (
-                  <input id={f.name} type="number" step="any" placeholder={`Typical: ${f.default}`}
-                    value={values[f.name]}
-                    onChange={e => setValues(v => ({ ...v, [f.name]: e.target.value }))} />
-                )}
-                {!f.binary && <div className="range">Usual range: {f.min} to {f.max}</div>}
+        <form onSubmit={handleSubmit} noValidate>
+          {groups.map(group => (
+            <section key={group.title} style={{ marginBottom: 22 }}>
+              <h3 style={{ margin: '0 0 10px' }}>{group.title}</h3>
+              <div className="form-grid">
+                {group.names.map(name => {
+                  const f = features.find(item => item.name === name);
+                  if (!f) return null;
+                  const whole = INTEGER_INPUTS.has(name);
+                  const max = whole ? Math.floor(f.max) : f.max;
+                  return (
+                    <div className="field" key={name}>
+                      <label htmlFor={name}>{f.label}</label>
+                      <input id={name} type="number" min="0" max={max}
+                        step={whole ? '1' : '0.01'}
+                        placeholder={whole ? 'Enter whole number' : 'Enter value'}
+                        value={values[name]}
+                        onChange={e => { setValues(v => ({ ...v, [name]: e.target.value })); setProblem(null); }} />
+                      <div className="range">{HELP[name]} {whole ? 'Enter a whole number.' : 'Use minutes or rupees as applicable; up to 2 decimal places.'}</div>
+                      <div className="range">Allowed range: 0 to {max}</div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
+            </section>
+          ))}
           <button className="btn btn-primary" type="submit" disabled={loading}>
-            {loading ? 'Predicting...' : 'Run Prediction'}
+            {loading ? 'Predicting...' : 'Predict Customer Churn'}
           </button>
-          <button className="btn btn-secondary" type="button" style={{ marginLeft: 8 }} onClick={clear}>Clear</button>
+          <button className="btn btn-secondary" type="button" style={{ marginLeft: 8 }} onClick={clear}>Clear All</button>
         </form>
-
         {problem && <div className="error-box" role="alert" style={{ marginTop: 20 }}>{problem}</div>}
         {result && <Result result={result} />}
       </div>
