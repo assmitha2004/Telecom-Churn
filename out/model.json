@@ -1,0 +1,160 @@
+{
+ "intercept": 1.8466630444017995,
+ "coef": {
+  "tenure": 0.0013485536269143693,
+  "MonthlyCharges": 0.0013649293518459135,
+  "log_tenure": -0.7554675429150585,
+  "SeniorCitizen=Yes": 0.22512987986746336,
+  "Partner=Yes": 0.03281258648504953,
+  "Dependents=Yes": -0.1247400963227802,
+  "PhoneService=No": 0.5749324345464782,
+  "MultipleLines=Yes": 0.36582461612918243,
+  "InternetService=DSL": -0.8996221930367385,
+  "InternetService=No": -1.6731135438157518,
+  "OnlineSecurity=Yes": -0.32228513147816906,
+  "OnlineBackup=Yes": -0.12751892631186135,
+  "DeviceProtection=Yes": 0.01954086777591209,
+  "TechSupport=Yes": -0.2876887767616047,
+  "StreamingTV=Yes": 0.2955487425093486,
+  "StreamingMovies=Yes": 0.3014342201319727,
+  "Contract=One year": -0.694564146623261,
+  "Contract=Two year": -1.647572573499693,
+  "PaperlessBilling=No": -0.3535138917379284,
+  "PaymentMethod=Bank transfer (automatic)": -0.2563310512335088,
+  "PaymentMethod=Credit card (automatic)": -0.3425077501474906,
+  "PaymentMethod=Mailed check": -0.3842589178898809
+ },
+ "std_coef": {
+  "tenure": 0.033100599004482104,
+  "MonthlyCharges": 0.04106522883320923,
+  "log_tenure": -0.8688995810435811,
+  "SeniorCitizen=Yes": 0.08303780467976211,
+  "Partner=Yes": 0.016397417066796427,
+  "Dependents=Yes": -0.05708471959362459,
+  "PhoneService=No": 0.16993331553266314,
+  "MultipleLines=Yes": 0.18068162743124572,
+  "InternetService=DSL": -0.4272612883156516,
+  "InternetService=No": -0.6887376639719955,
+  "OnlineSecurity=Yes": -0.14573097337896326,
+  "OnlineBackup=Yes": -0.06061661004166667,
+  "DeviceProtection=Yes": 0.009282454079237812,
+  "TechSupport=Yes": -0.13056516192599477,
+  "StreamingTV=Yes": 0.14377982531245775,
+  "StreamingMovies=Yes": 0.14692312096783386,
+  "Contract=One year": -0.28258927946480566,
+  "Contract=Two year": -0.7033178154199434,
+  "PaperlessBilling=No": -0.17370361890262667,
+  "PaymentMethod=Bank transfer (automatic)": -0.10606732048838081,
+  "PaymentMethod=Credit card (automatic)": -0.1410269896338357,
+  "PaymentMethod=Mailed check": -0.16124938869335548
+ },
+ "means": {
+  "tenure": 32.421786120591584,
+  "MonthlyCharges": 64.79820819112628,
+  "log_tenure": 3.041623426476915,
+  "SeniorCitizen=Yes": 0.16240045506257111,
+  "Partner=Yes": 0.4825085324232082,
+  "Dependents=Yes": 0.2984926052332196,
+  "PhoneService=No": 0.09670079635949944,
+  "MultipleLines=Yes": 0.42192832764505117,
+  "InternetService=DSL": 0.3435722411831627,
+  "InternetService=No": 0.2161547212741752,
+  "OnlineSecurity=Yes": 0.286547212741752,
+  "OnlineBackup=Yes": 0.34485210466439137,
+  "DeviceProtection=Yes": 0.3438566552901024,
+  "TechSupport=Yes": 0.2901023890784983,
+  "StreamingTV=Yes": 0.3843856655290102,
+  "StreamingMovies=Yes": 0.3883674630261661,
+  "Contract=One year": 0.20932878270762229,
+  "Contract=Two year": 0.2396188850967008,
+  "PaperlessBilling=No": 0.4072810011376564,
+  "PaymentMethod=Bank transfer (automatic)": 0.21928327645051193,
+  "PaymentMethod=Credit card (automatic)": 0.21629692832764505,
+  "PaymentMethod=Mailed check": 0.22810011376564276
+ },
+ "levels": {
+  "SeniorCitizen": [
+   "No",
+   "Yes"
+  ],
+  "Partner": [
+   "No",
+   "Yes"
+  ],
+  "Dependents": [
+   "No",
+   "Yes"
+  ],
+  "PhoneService": [
+   "No",
+   "Yes"
+  ],
+  "MultipleLines": [
+   "No",
+   "Yes"
+  ],
+  "InternetService": [
+   "DSL",
+   "Fiber optic",
+   "No"
+  ],
+  "OnlineSecurity": [
+   "No",
+   "Yes"
+  ],
+  "OnlineBackup": [
+   "No",
+   "Yes"
+  ],
+  "DeviceProtection": [
+   "No",
+   "Yes"
+  ],
+  "TechSupport": [
+   "No",
+   "Yes"
+  ],
+  "StreamingTV": [
+   "No",
+   "Yes"
+  ],
+  "StreamingMovies": [
+   "No",
+   "Yes"
+  ],
+  "Contract": [
+   "Month-to-month",
+   "One year",
+   "Two year"
+  ],
+  "PaperlessBilling": [
+   "No",
+   "Yes"
+  ],
+  "PaymentMethod": [
+   "Bank transfer (automatic)",
+   "Credit card (automatic)",
+   "Electronic check",
+   "Mailed check"
+  ]
+ },
+ "baseline": {
+  "SeniorCitizen": "No",
+  "Partner": "No",
+  "Dependents": "No",
+  "PhoneService": "Yes",
+  "MultipleLines": "No",
+  "InternetService": "Fiber optic",
+  "OnlineSecurity": "No",
+  "OnlineBackup": "No",
+  "DeviceProtection": "No",
+  "TechSupport": "No",
+  "StreamingTV": "No",
+  "StreamingMovies": "No",
+  "Contract": "Month-to-month",
+  "PaperlessBilling": "Yes",
+  "PaymentMethod": "Electronic check"
+ },
+ "threshold": 0.36,
+ "base_rate": 0.26578498293515357
+}

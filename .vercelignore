@@ -1,9 +1,0 @@
-# Not needed in production. The 79 MB dataset must never be uploaded to Vercel.
-backend/data
-backend/train.py
-backend/tests
-backend/requirements-train.txt
-backend/requirements-dev.txt
-docs
-node_modules
-frontend/node_modules

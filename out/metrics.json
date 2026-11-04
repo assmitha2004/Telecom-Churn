@@ -1,0 +1,176 @@
+{
+ "n": 7032,
+ "churn_rate": 0.2658,
+ "models": {
+  "Logistic Regression": {
+   "cv_auc": 0.8516,
+   "cv_auc_sd": 0.0048,
+   "test_auc": 0.8398
+  },
+  "Random Forest": {
+   "cv_auc": 0.8456,
+   "cv_auc_sd": 0.0044,
+   "test_auc": 0.8364
+  },
+  "Gradient Boosting": {
+   "cv_auc": 0.8469,
+   "cv_auc_sd": 0.0044,
+   "test_auc": 0.8355
+  }
+ },
+ "op": {
+  "threshold": 0.36,
+  "accuracy": 0.7783,
+  "precision": 0.5657,
+  "recall": 0.7139,
+  "f1": 0.6312,
+  "tp": 267,
+  "fp": 205,
+  "fn": 107,
+  "tn": 828
+ },
+ "default": {
+  "threshold": 0.5,
+  "accuracy": 0.7953,
+  "precision": 0.6361,
+  "recall": 0.5374,
+  "f1": 0.5826,
+  "tp": 201,
+  "fp": 115,
+  "fn": 173,
+  "tn": 918
+ },
+ "bands": [
+  {
+   "band": "Low",
+   "lo": 0,
+   "hi": 0.3,
+   "customers": 849,
+   "share": 0.6034,
+   "actual_churn": 0.1025
+  },
+  {
+   "band": "Moderate",
+   "lo": 0.3,
+   "hi": 0.55,
+   "customers": 306,
+   "share": 0.2175,
+   "actual_churn": 0.3954
+  },
+  {
+   "band": "High",
+   "lo": 0.55,
+   "hi": 0.75,
+   "customers": 165,
+   "share": 0.1173,
+   "actual_churn": 0.5576
+  },
+  {
+   "band": "Critical",
+   "lo": 0.75,
+   "hi": 1,
+   "customers": 87,
+   "share": 0.0618,
+   "actual_churn": 0.8506
+  }
+ ],
+ "segments": {
+  "Contract": {
+   "Month-to-month": 0.4271,
+   "One year": 0.1128,
+   "Two year": 0.0285
+  },
+  "InternetService": {
+   "DSL": 0.19,
+   "Fiber optic": 0.4189,
+   "No": 0.0743
+  },
+  "PaymentMethod": {
+   "Bank transfer (automatic)": 0.1673,
+   "Credit card (automatic)": 0.1525,
+   "Electronic check": 0.4529,
+   "Mailed check": 0.192
+  },
+  "TechSupport": {
+   "No": 0.3123,
+   "Yes": 0.152
+  },
+  "OnlineSecurity": {
+   "No": 0.3137,
+   "Yes": 0.1464
+  },
+  "SeniorCitizen": {
+   "No": 0.2365,
+   "Yes": 0.4168
+  },
+  "PaperlessBilling": {
+   "No": 0.1638,
+   "Yes": 0.3359
+  },
+  "Partner": {
+   "No": 0.3298,
+   "Yes": 0.1972
+  },
+  "Dependents": {
+   "No": 0.3128,
+   "Yes": 0.1553
+  },
+  "tenure_band": {
+   "0-6": 0.5333,
+   "7-12": 0.3589,
+   "13-24": 0.2871,
+   "25-48": 0.2039,
+   "49-72": 0.0951
+  }
+ },
+ "top_std": [
+  [
+   "log_tenure",
+   -0.8688995810435811
+  ],
+  [
+   "Contract=Two year",
+   -0.7033178154199434
+  ],
+  [
+   "InternetService=No",
+   -0.6887376639719955
+  ],
+  [
+   "InternetService=DSL",
+   -0.4272612883156516
+  ],
+  [
+   "Contract=One year",
+   -0.28258927946480566
+  ],
+  [
+   "MultipleLines=Yes",
+   0.18068162743124572
+  ],
+  [
+   "PaperlessBilling=No",
+   -0.17370361890262667
+  ],
+  [
+   "PhoneService=No",
+   0.16993331553266314
+  ],
+  [
+   "PaymentMethod=Mailed check",
+   -0.16124938869335548
+  ],
+  [
+   "StreamingMovies=Yes",
+   0.14692312096783386
+  ],
+  [
+   "OnlineSecurity=Yes",
+   -0.14573097337896326
+  ],
+  [
+   "StreamingTV=Yes",
+   0.14377982531245775
+  ]
+ ]
+}

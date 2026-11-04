@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Retention Risk Desk</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: operator console — questionnaire on the left, sticky verdict panel on the right; batch tab for portfolio scoring */
+:root{
+  --bg:#eef2f3; --panel:#ffffff; --ink:#132a33; --muted:#5b6f77; --line:#d3dde0; --soft:#e4ebed;
+  --accent:#0f5f6b; --accent-ink:#ffffff; --accent-soft:#dcecee;
+  --low:#2f7d4f; --mod:#b7871a; --high:#c25a1c; --crit:#a3233a;
+  --low-bg:#e2f1e7; --mod-bg:#f7eed6; --high-bg:#f8e3d5; --crit-bg:#f5dde2;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1a1f; --panel:#13252c; --ink:#e3ecee; --muted:#93a8af; --line:#25404a; --soft:#1a3139;
+  --accent:#5fb7c2; --accent-ink:#06191d; --accent-soft:#173b42;
+  --low:#6cc490; --mod:#e2b84f; --high:#ee8a4c; --crit:#f07087;
+  --low-bg:#163428; --mod-bg:#3a3017; --high-bg:#3d2617; --crit-bg:#3f1a23; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1a1f; --panel:#13252c; --ink:#e3ecee; --muted:#93a8af; --line:#25404a; --soft:#1a3139;
+  --accent:#5fb7c2; --accent-ink:#06191d; --accent-soft:#173b42;
+  --low:#6cc490; --mod:#e2b84f; --high:#ee8a4c; --crit:#f07087;
+  --low-bg:#163428; --mod-bg:#3a3017; --high-bg:#3d2617; --crit-bg:#3f1a23; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;border-bottom:2px solid var(--ink);padding-bottom:12px}
+.brand small{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:700;font-size:30px;line-height:1.1;margin:2px 0 0;text-wrap:balance}
+.tabs{display:flex;gap:4px;background:var(--soft);padding:4px;border-radius:6px}
+.tabs button{font:600 13px var(--f-body);border:0;background:transparent;color:var(--muted);padding:8px 14px;border-radius:4px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.lede{color:var(--muted);max-width:70ch;margin:12px 0 18px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.presets{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+.presets span{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.chip{font:500 12.5px var(--f-body);border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:5px 11px;border-radius:999px;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+fieldset{border:1px solid var(--line);background:var(--panel);border-radius:8px;margin:0 0 14px;padding:0}
+legend{display:contents}
+.fs-head{display:flex;align-items:baseline;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.fs-head b{font-family:var(--f-mono);font-size:11px;color:var(--accent);letter-spacing:.06em}
+.fs-head h2{font-family:var(--f-display);font-size:17px;font-weight:600;margin:0}
+.fs-head p{margin:0 0 0 auto;font-size:12px;color:var(--muted)}
+.q{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--soft)}
+.q:last-child{border-bottom:0}
+@media (max-width:640px){.q{grid-template-columns:minmax(0,1fr)}}
+.q label.ql{font-weight:500}
+.q .hint{display:block;font-size:12px;color:var(--muted);font-weight:400}
+.q[data-off="1"]{opacity:.45}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{padding:6px 12px;font-size:13px;cursor:pointer;border-right:1px solid var(--line);background:var(--panel);white-space:nowrap}
+.seg label:last-of-type{border-right:0}
+.seg input:checked+label{background:var(--accent);color:var(--accent-ink)}
+.seg input:focus-visible+label{outline:2px solid var(--accent);outline-offset:-2px}
+.seg input:disabled+label{cursor:not-allowed}
+select,input[type=number]{font:500 13px var(--f-body);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 10px;min-width:0}
+select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.range{display:flex;align-items:center;gap:10px}
+.range input[type=range]{width:200px;max-width:50vw;accent-color:var(--accent)}
+.range input[type=number]{width:84px;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.unit{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+/* verdict */
+aside.verdict{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.v-band{padding:16px 18px;border-bottom:1px solid var(--line);background:var(--band-bg,var(--soft))}
+.v-band small{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.v-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.v-prob{font-family:var(--f-display);font-weight:700;font-size:54px;line-height:1;color:var(--band,var(--ink));font-variant-numeric:tabular-nums}
+.v-prob span{font-size:24px}
+.pill{display:inline-block;font:600 12px var(--f-body);letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:4px;background:var(--band,var(--ink));color:var(--panel)}
+.v-call{margin-top:8px;font-weight:600}
+.meter{position:relative;height:10px;border-radius:5px;margin:14px 0 4px;background:linear-gradient(90deg,var(--low) 0 30%,var(--mod) 30% 55%,var(--high) 55% 75%,var(--crit) 75%)}
+.meter i{position:absolute;top:-4px;width:4px;height:18px;margin-left:-2px;background:var(--ink);border-radius:2px;transition:left .25s}
+.meter u{position:absolute;top:-3px;bottom:-3px;width:0;border-left:1px dashed var(--ink);opacity:.5}
+.ticks{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:10.5px;color:var(--muted)}
+.v-sec{padding:14px 18px;border-bottom:1px solid var(--line)}
+.v-sec:last-child{border-bottom:0}
+.v-sec h3{font-family:var(--f-mono);font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:13px}
+.kv b{font-family:var(--f-mono);font-weight:500;font-variant-numeric:tabular-nums}
+.drv{display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:6px 10px;align-items:center;font-size:12.5px}
+.bar{position:relative;height:8px;background:var(--soft);border-radius:2px}
+.bar s{position:absolute;top:0;bottom:0;border-radius:2px;text-decoration:none}
+.bar::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;border-left:1px solid var(--muted)}
+.acts{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.acts li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;font-size:13px}
+.acts li em{font-style:normal;font-family:var(--f-mono);font-size:10.5px;font-weight:500;padding:2px 6px;border-radius:3px;background:var(--accent-soft);color:var(--accent);height:fit-content;white-space:nowrap}
+.acts li strong{display:block}
+.acts li span{color:var(--muted)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:600 13px var(--f-body);border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);padding:8px 14px;border-radius:6px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.note{font-size:12px;color:var(--muted)}
+/* batch */
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 16px}
+@media (max-width:720px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.card{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--band);border-radius:6px;padding:12px 14px}
+.card small{font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.card b{display:block;font-family:var(--f-display);font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}
+.card span{font-size:12px;color:var(--muted)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:14px}
+.drop{border:1.5px dashed var(--line);border-radius:6px;padding:8px 12px;color:var(--muted);font-size:13px}
+.drop.on{border-color:var(--accent);color:var(--accent)}
+.tablewrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:820px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--soft);white-space:nowrap}
+th{font-family:var(--f-mono);font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--soft);position:sticky;top:0;cursor:pointer}
+td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+th.num{text-align:right}
+tbody tr:hover{background:var(--soft)}
+.tag{font:600 11px var(--f-body);padding:2px 8px;border-radius:3px;background:var(--b-bg);color:var(--b)}
+.footer{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px 24px}
+@media (prefers-reduced-motion:reduce){.meter i{transition:none}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><small>Customer Retention · Churn Risk Assessment</small><h1>Retention Risk Desk</h1></div>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-single" aria-selected="true" aria-controls="view-single">Single customer</button>
+      <button role="tab" id="tab-batch" aria-selected="false" aria-controls="view-batch">Portfolio batch</button>
+      <button role="tab" id="tab-model" aria-selected="false" aria-controls="view-model">Model &amp; method</button>
+    </div>
+  </header>
+
+  <!-- SINGLE -->
+  <section id="view-single" role="tabpanel">
+    <p class="lede">Answer the questions from the customer's account record. The risk estimate updates as you go and shows what is driving it, along with the retention actions that fit this profile.</p>
+    <div class="grid">
+      <form id="f" autocomplete="off" novalidate>
+        <div class="presets"><span>Load example</span>
+          <button type="button" class="chip" data-preset="atrisk">New fibre, month-to-month</button>
+          <button type="button" class="chip" data-preset="mid">Mid-tenure DSL, one-year</button>
+          <button type="button" class="chip" data-preset="loyal">Long-standing, two-year</button>
+          <button type="button" class="chip" data-preset="reset">Reset form</button>
+        </div>
+
+        <fieldset>
+          <legend><div class="fs-head"><b>A</b><h2>Account &amp; relationship</h2><p>Strongest signals</p></div></legend>
+          <div class="q"><label class="ql" for="tenure">How long has the customer been with us?<span class="hint">Completed months of service on the account.</span></label>
+            <div class="range"><input type="range" id="tenure_r" min="1" max="72" aria-label="Tenure slider"><input type="number" id="tenure" min="1" max="72"><span class="unit">mo</span></div></div>
+          <div class="q"><span class="ql">What contract term is the customer on?<span class="hint">Current commitment, not past contracts.</span></span>
+            <div class="seg" data-name="Contract"></div></div>
+          <div class="q"><label class="ql" for="MonthlyCharges">What is the monthly recurring charge?<span class="hint">Current bill before one-off charges, in USD.</span></label>
+            <div class="range"><input type="range" id="mc_r" min="18" max="120" step="0.5" aria-label="Monthly charge slider"><input type="number" id="MonthlyCharges" min="18" max="120" step="0.05"><span class="unit">$/mo</span></div></div>
+        </fieldset>
+
+        <fieldset>
+          <legend><div class="fs-head"><b>B</b><h2>Services subscribed</h2><p>What the customer uses</p></div></legend>
+          <div class="q"><span class="ql">Does the customer have a phone line with us?</span><div class="seg" data-name="PhoneService"></div></div>
+          <div class="q" data-dep="phone"><span class="ql">More than one phone line?</span><div class="seg" data-name="MultipleLines"></div></div>
+          <div class="q"><span class="ql">Which internet service is on the account?</span><div class="seg" data-name="InternetService"></div></div>
+          <div class="q" data-dep="net"><span class="ql">Online security add-on</span><div class="seg" data-name="OnlineSecurity"></div></div>
+          <div class="q" data-dep="net"><span class="ql">Online backup add-on</span><div class="seg" data-name="OnlineBackup"></div></div>
+          <div class="q" data-dep="net"><span class="ql">Device protection plan</span><div class="seg" data-name="DeviceProtection"></div></div>
+          <div class="q" data-dep="net"><span class="ql">Premium technical support</span><div class="seg" data-name="TechSupport"></div></div>
+          <div class="q" data-dep="net"><span class="ql">Streaming TV package</span><div class="seg" data-name="StreamingTV"></div></div>
+          <div class="q" data-dep="net"><span class="ql">Streaming movies package</span><div class="seg" data-name="StreamingMovies"></div></div>
+        </fieldset>
+
+        <fieldset>
+          <legend><div class="fs-head"><b>C</b><h2>Billing</h2><p>How the customer pays</p></div></legend>
+          <div class="q"><label class="ql" for="PaymentMethod">Payment method on file</label><select id="PaymentMethod"></select></div>
+          <div class="q"><span class="ql">Paperless (e-bill) billing?</span><div class="seg" data-name="PaperlessBilling"></div></div>
+        </fieldset>
+
+        <fieldset>
+          <legend><div class="fs-head"><b>D</b><h2>Household profile</h2><p>From the account holder record</p></div></legend>
+          <div class="q"><span class="ql">Is the account holder a senior citizen (65+)?</span><div class="seg" data-name="SeniorCitizen"></div></div>
+          <div class="q"><span class="ql">Has a partner or spouse on record?</span><div class="seg" data-name="Partner"></div></div>
+          <div class="q"><span class="ql">Has dependents on record?</span><div class="seg" data-name="Dependents"></div></div>
+        </fieldset>
+      </form>
+
+      <aside class="verdict" aria-live="polite">
+        <div class="v-band" id="vband">
+          <small>Probability of churn</small>
+          <div class="v-row"><div class="v-prob" id="vprob">--<span>%</span></div><span class="pill" id="vpill">—</span></div>
+          <div class="meter"><u id="vbase"></u><i id="vneedle"></i></div>
+          <div class="ticks"><span>0</span><span>30</span><span>55</span><span>75</span><span>100</span></div>
+          <div class="v-call" id="vcall"></div>
+        </div>
+        <div class="v-sec"><h3>Assessment</h3><div class="kv" id="vkv"></div></div>
+        <div class="v-sec"><h3>What is driving this score</h3><div class="drv" id="vdrv"></div>
+          <p class="note" style="margin:10px 0 0">Bars compare this customer to an average customer. Right of centre raises risk; left lowers it.</p></div>
+        <div class="v-sec"><h3>Recommended retention actions</h3><ul class="acts" id="vacts"></ul></div>
+        <div class="v-sec"><div class="btnrow"><button class="btn" type="button" id="copySum">Copy case summary</button></div>
+          <p class="note" id="copyMsg" style="margin:8px 0 0"></p></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- BATCH -->
+  <section id="view-batch" role="tabpanel" hidden>
+    <p class="lede">Score a list of customers at once to plan a retention campaign. Upload a CSV export with the same column names as the Telco dataset. A 40-customer sample from the dataset is loaded to show the output.</p>
+    <div class="toolbar">
+      <div class="btnrow">
+        <label class="btn" for="csv" style="cursor:pointer">Upload CSV</label><input type="file" id="csv" accept=".csv,text/csv" hidden>
+        <button class="btn ghost" type="button" id="loadSample">Load sample</button>
+        <button class="btn ghost" type="button" id="copyCsv">Copy scored results</button>
+      </div>
+      <div class="drop" id="drop">or drop a CSV file here</div>
+    </div>
+    <p class="note" id="batchMsg"></p>
+    <div class="cards" id="bcards"></div>
+    <div class="tablewrap"><table id="btable"><thead><tr>
+      <th data-k="id">Customer ID</th><th data-k="p" class="num">Churn risk</th><th data-k="band">Band</th><th data-k="tenure" class="num">Tenure</th>
+      <th data-k="Contract">Contract</th><th data-k="mc" class="num">Monthly $</th><th data-k="driver">Top driver</th><th data-k="action">First action</th><th data-k="actual">Actual (if known)</th>
+    </tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <!-- MODEL -->
+  <section id="view-model" role="tabpanel" hidden>
+    <p class="lede">How the score is produced, how accurate it is, and how to read it.</p>
+    <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)" id="modelgrid"></div>
+  </section>
+
+  <div class="footer"><span>Model: regularised logistic regression · IBM Telco Customer Churn (7,032 customers)</span><span>Scoring runs in your browser; no customer data leaves this page.</span></div>
+</div>
+
+<script>
+const M = {
+ "intercept": 1.8466630444017995,
+ "coef": {
+  "tenure": 0.0013485536269143693,
+  "MonthlyCharges": 0.0013649293518459135,
+  "log_tenure": -0.7554675429150585,
+  "SeniorCitizen=Yes": 0.22512987986746336,
+  "Partner=Yes": 0.03281258648504953,
+  "Dependents=Yes": -0.1247400963227802,
+  "PhoneService=No": 0.5749324345464782,
+  "MultipleLines=Yes": 0.36582461612918243,
+  "InternetService=DSL": -0.8996221930367385,
+  "InternetService=No": -1.6731135438157518,
+  "OnlineSecurity=Yes": -0.32228513147816906,
+  "OnlineBackup=Yes": -0.12751892631186135,
+  "DeviceProtection=Yes": 0.01954086777591209,
+  "TechSupport=Yes": -0.2876887767616047,
+  "StreamingTV=Yes": 0.2955487425093486,
+  "StreamingMovies=Yes": 0.3014342201319727,
+  "Contract=One year": -0.694564146623261,
+  "Contract=Two year": -1.647572573499693,
+  "PaperlessBilling=No": -0.3535138917379284,
+  "PaymentMethod=Bank transfer (automatic)": -0.2563310512335088,
+  "PaymentMethod=Credit card (automatic)": -0.3425077501474906,
+  "PaymentMethod=Mailed check": -0.3842589178898809
+ },
+ "std_coef": {
+  "tenure": 0.033100599004482104,
+  "MonthlyCharges": 0.04106522883320923,
+  "log_tenure": -0.8688995810435811,
+  "SeniorCitizen=Yes": 0.08303780467976211,
+  "Partner=Yes": 0.016397417066796427,
+  "Dependents=Yes": -0.05708471959362459,
+  "PhoneService=No": 0.16993331553266314,
+  "MultipleLines=Yes": 0.18068162743124572,
+  "InternetService=DSL": -0.4272612883156516,
+  "InternetService=No": -0.6887376639719955,
+  "OnlineSecurity=Yes": -0.14573097337896326,
+  "OnlineBackup=Yes": -0.06061661004166667,
+  "DeviceProtection=Yes": 0.009282454079237812,
+  "TechSupport=Yes": -0.13056516192599477,
+  "StreamingTV=Yes": 0.14377982531245775,
+  "StreamingMovies=Yes": 0.14692312096783386,
+  "Contract=One year": -0.28258927946480566,
+  "Contract=Two year": -0.7033178154199434,
+  "PaperlessBilling=No": -0.17370361890262667,
+  "PaymentMethod=Bank transfer (automatic)": -0.10606732048838081,
+  "PaymentMethod=Credit card (automatic)": -0.1410269896338357,
+  "PaymentMethod=Mailed check": -0.16124938869335548
+ },
+ "means": {
+  "tenure": 32.421786120591584,
+  "MonthlyCharges": 64.79820819112628,
+  "log_tenure": 3.041623426476915,
+  "SeniorCitizen=Yes": 0.16240045506257111,
+  "Partner=Yes": 0.4825085324232082,
+  "Dependents=Yes": 0.2984926052332196,
+  "PhoneService=No": 0.09670079635949944,
+  "MultipleLines=Yes": 0.42192832764505117,
+  "InternetService=DSL": 0.3435722411831627,
+  "InternetService=No": 0.2161547212741752,
+  "OnlineSecurity=Yes": 0.286547212741752,
+  "OnlineBackup=Yes": 0.34485210466439137,
+  "DeviceProtection=Yes": 0.3438566552901024,
+  "TechSupport=Yes": 0.2901023890784983,
+  "StreamingTV=Yes": 0.3843856655290102,
+  "StreamingMovies=Yes": 0.3883674630261661,
+  "Contract=One year": 0.20932878270762229,
+  "Contract=Two year": 0.2396188850967008,
+  "PaperlessBilling=No": 0.4072810011376564,
+  "PaymentMethod=Bank transfer (automatic)": 0.21928327645051193,
+  "PaymentMethod=Credit card (automatic)": 0.21629692832764505,
+  "PaymentMethod=Mailed check": 0.22810011376564276
+ },
+ "levels": {
+  "SeniorCitizen": [
+   "No",
+   "Yes"
+  ],
+  "Partner": [
+   "No",
+   "Yes"
+  ],
+  "Dependents": [
+   "No",
+   "Yes"
+  ],
+  "PhoneService": [
+   "No",
+   "Yes"
+  ],
+  "MultipleLines": [
+   "No",
+   "Yes"
+  ],
+  "InternetService": [
+   "DSL",
+   "Fiber optic",
+   "No"
+  ],
+  "OnlineSecurity": [
+   "No",
+   "Yes"
+  ],
+  "OnlineBackup": [
+   "No",
+   "Yes"
+  ],
+  "DeviceProtection": [
+   "No",
+   "Yes"
+  ],
+  "TechSupport": [
+   "No",
+   "Yes"
+  ],
+  "StreamingTV": [
+   "No",
+   "Yes"
+  ],
+  "StreamingMovies": [
+   "No",
+   "Yes"
+  ],
+  "Contract": [
+   "Month-to-month",
+   "One year",
+   "Two year"
+  ],
+  "PaperlessBilling": [
+   "No",
+   "Yes"
+  ],
+  "PaymentMethod": [
+   "Bank transfer (automatic)",
+   "Credit card (automatic)",
+   "Electronic check",
+   "Mailed check"
+  ]
+ },
+ "baseline": {
+  "SeniorCitizen": "No",
+  "Partner": "No",
+  "Dependents": "No",
+  "PhoneService": "Yes",
+  "MultipleLines": "No",
+  "InternetService": "Fiber optic",
+  "OnlineSecurity": "No",
+  "OnlineBackup": "No",
+  "DeviceProtection": "No",
+  "TechSupport": "No",
+  "StreamingTV": "No",
+  "StreamingMovies": "No",
+  "Contract": "Month-to-month",
+  "PaperlessBilling": "Yes",
+  "PaymentMethod": "Electronic check"
+ },
+ "threshold": 0.36,
+ "base_rate": 0.26578498293515357
+};
+const MET = {
+ "n": 7032,
+ "churn_rate": 0.2658,
+ "models": {
+  "Logistic Regression": {
+   "cv_auc": 0.8516,
+   "cv_auc_sd": 0.0048,
+   "test_auc": 0.8398
+  },
+  "Random Forest": {
+   "cv_auc": 0.8456,
+   "cv_auc_sd": 0.0044,
+   "test_auc": 0.8364
+  },
+  "Gradient Boosting": {
+   "cv_auc": 0.8469,
+   "cv_auc_sd": 0.0044,
+   "test_auc": 0.8355
+  }
+ },
+ "op": {
+  "threshold": 0.36,
+  "accuracy": 0.7783,
+  "precision": 0.5657,
+  "recall": 0.7139,
+  "f1": 0.6312,
+  "tp": 267,
+  "fp": 205,
+  "fn": 107,
+  "tn": 828
+ },
+ "default": {
+  "threshold": 0.5,
+  "accuracy": 0.7953,
+  "precision": 0.6361,
+  "recall": 0.5374,
+  "f1": 0.5826,
+  "tp": 201,
+  "fp": 115,
+  "fn": 173,
+  "tn": 918
+ },
+ "bands": [
+  {
+   "band": "Low",
+   "lo": 0,
+   "hi": 0.3,
+   "customers": 849,
+   "share": 0.6034,
+   "actual_churn": 0.1025
+  },
+  {
+   "band": "Moderate",
+   "lo": 0.3,
+   "hi": 0.55,
+   "customers": 306,
+   "share": 0.2175,
+   "actual_churn": 0.3954
+  },
+  {
+   "band": "High",
+   "lo": 0.55,
+   "hi": 0.75,
+   "customers": 165,
+   "share": 0.1173,
+   "actual_churn": 0.5576
+  },
+  {
+   "band": "Critical",
+   "lo": 0.75,
+   "hi": 1,
+   "customers": 87,
+   "share": 0.0618,
+   "actual_churn": 0.8506
+  }
+ ],
+ "segments": {
+  "Contract": {
+   "Month-to-month": 0.4271,
+   "One year": 0.1128,
+   "Two year": 0.0285
+  },
+  "InternetService": {
+   "DSL": 0.19,
+   "Fiber optic": 0.4189,
+   "No": 0.0743
+  },
+  "PaymentMethod": {
+   "Bank transfer (automatic)": 0.1673,
+   "Credit card (automatic)": 0.1525,
+   "Electronic check": 0.4529,
+   "Mailed check": 0.192
+  },
+  "TechSupport": {
+   "No": 0.3123,
+   "Yes": 0.152
+  },
+  "OnlineSecurity": {
+   "No": 0.3137,
+   "Yes": 0.1464
+  },
+  "SeniorCitizen": {
+   "No": 0.2365,
+   "Yes": 0.4168
+  },
+  "PaperlessBilling": {
+   "No": 0.1638,
+   "Yes": 0.3359
+  },
+  "Partner": {
+   "No": 0.3298,
+   "Yes": 0.1972
+  },
+  "Dependents": {
+   "No": 0.3128,
+   "Yes": 0.1553
+  },
+  "tenure_band": {
+   "0-6": 0.5333,
+   "7-12": 0.3589,
+   "13-24": 0.2871,
+   "25-48": 0.2039,
+   "49-72": 0.0951
+  }
+ },
+ "top_std": [
+  [
+   "log_tenure",
+   -0.8688995810435811
+  ],
+  [
+   "Contract=Two year",
+   -0.7033178154199434
+  ],
+  [
+   "InternetService=No",
+   -0.6887376639719955
+  ],
+  [
+   "InternetService=DSL",
+   -0.4272612883156516
+  ],
+  [
+   "Contract=One year",
+   -0.28258927946480566
+  ],
+  [
+   "MultipleLines=Yes",
+   0.18068162743124572
+  ],
+  [
+   "PaperlessBilling=No",
+   -0.17370361890262667
+  ],
+  [
+   "PhoneService=No",
+   0.16993331553266314
+  ],
+  [
+   "PaymentMethod=Mailed check",
+   -0.16124938869335548
+  ],
+  [
+   "StreamingMovies=Yes",
+   0.14692312096783386
+  ],
+  [
+   "OnlineSecurity=Yes",
+   -0.14573097337896326
+  ],
+  [
+   "StreamingTV=Yes",
+   0.14377982531245775
+  ]
+ ]
+};
+const SAMPLE = "customerID,SeniorCitizen,Partner,Dependents,tenure,PhoneService,MultipleLines,InternetService,OnlineSecurity,OnlineBackup,DeviceProtection,TechSupport,StreamingTV,StreamingMovies,Contract,PaperlessBilling,PaymentMethod,MonthlyCharges,Churn\n6901-GOGZG,0,No,Yes,60,Yes,Yes,DSL,Yes,No,Yes,Yes,Yes,Yes,Two year,Yes,Electronic check,84.95,No\n7621-VPNET,0,Yes,No,42,Yes,Yes,Fiber optic,No,No,Yes,Yes,No,No,Month-to-month,Yes,Credit card (automatic),85.9,No\n8042-JVNFH,0,No,No,1,Yes,No,Fiber optic,No,No,No,No,No,No,Month-to-month,Yes,Mailed check,71.35,Yes\n7402-PWYJJ,0,Yes,No,53,Yes,Yes,Fiber optic,No,No,No,Yes,No,Yes,One year,Yes,Electronic check,91.15,No\n7873-CVMAW,0,No,No,72,Yes,Yes,DSL,Yes,Yes,Yes,Yes,Yes,Yes,Two year,No,Credit card (automatic),88.55,No\n6207-WIOLX,0,Yes,Yes,25,No,No phone service,DSL,Yes,Yes,Yes,No,Yes,Yes,Month-to-month,Yes,Credit card (automatic),58.6,Yes\n6542-LWGXJ,0,Yes,No,3,No,No phone service,DSL,No,No,No,No,No,No,Month-to-month,No,Mailed check,25.0,No\n5574-NXZIU,0,No,No,63,Yes,No,Fiber optic,Yes,Yes,Yes,Yes,Yes,Yes,Two year,No,Credit card (automatic),109.2,No\n1660-HSOOQ,0,No,No,1,Yes,No,DSL,No,No,Yes,No,No,No,Month-to-month,Yes,Mailed check,49.65,Yes\n2065-MMKGR,0,No,No,29,Yes,Yes,DSL,No,No,No,No,Yes,Yes,One year,Yes,Credit card (automatic),71.0,No\n6728-CZFEI,0,No,No,15,Yes,No,DSL,No,No,No,No,Yes,No,One year,No,Mailed check,56.15,No\n2446-BEGGB,1,No,No,6,Yes,Yes,Fiber optic,No,Yes,No,No,Yes,Yes,Month-to-month,Yes,Electronic check,98.25,Yes\n7297-DVYGA,0,No,No,51,Yes,No,No,No internet service,No internet service,No internet service,No internet service,No internet service,No internet service,One year,Yes,Bank transfer (automatic),19.85,No\n0384-RVBPI,0,No,No,20,Yes,No,DSL,Yes,No,Yes,No,No,Yes,Month-to-month,No,Credit card (automatic),64.4,No\n6432-TWQLB,0,Yes,No,5,Yes,Yes,Fiber optic,No,Yes,No,Yes,No,No,Month-to-month,Yes,Electronic check,85.4,Yes\n8648-PFRMP,1,No,No,14,No,No phone service,DSL,No,No,No,No,Yes,Yes,Month-to-month,Yes,Electronic check,46.35,No\n2885-HIJDH,0,Yes,Yes,69,Yes,Yes,DSL,Yes,No,Yes,Yes,Yes,Yes,Two year,No,Bank transfer (automatic),86.9,No\n7065-YUNRY,0,No,No,1,Yes,No,DSL,No,No,No,No,No,No,Month-to-month,Yes,Mailed check,45.3,Yes\n5138-WVKYJ,0,No,No,10,Yes,Yes,Fiber optic,Yes,No,No,No,Yes,Yes,Month-to-month,No,Electronic check,98.55,Yes\n0928-JMXNP,1,Yes,No,4,No,No phone service,DSL,No,No,Yes,No,No,No,Month-to-month,Yes,Electronic check,29.9,No\n5302-BDJNT,0,No,No,35,Yes,Yes,Fiber optic,No,No,Yes,Yes,Yes,No,Month-to-month,No,Electronic check,95.5,No\n2581-VKIRT,0,Yes,Yes,59,Yes,Yes,DSL,Yes,Yes,No,Yes,No,No,One year,No,Mailed check,65.5,No\n5922-ABDVO,0,Yes,No,19,Yes,Yes,Fiber optic,No,No,Yes,No,No,Yes,Month-to-month,No,Mailed check,89.65,Yes\n8582-KRHPJ,0,No,No,50,No,No phone service,DSL,Yes,Yes,No,No,No,No,Month-to-month,Yes,Mailed check,35.0,No\n9496-IVVRP,0,Yes,Yes,11,Yes,No,DSL,Yes,No,No,No,No,No,Month-to-month,No,Bank transfer (automatic),51.0,No\n5293-WXJAK,1,Yes,No,11,Yes,Yes,Fiber optic,No,No,Yes,Yes,Yes,Yes,Month-to-month,Yes,Bank transfer (automatic),104.05,Yes\n2474-BRUCM,1,Yes,No,40,Yes,Yes,Fiber optic,Yes,No,No,No,Yes,Yes,Month-to-month,No,Electronic check,101.85,Yes\n1049-FYSYG,0,Yes,No,17,No,No phone service,DSL,No,Yes,Yes,No,No,No,Month-to-month,Yes,Credit card (automatic),35.65,No\n6134-KWTBV,0,No,No,62,Yes,Yes,No,No internet service,No internet service,No internet service,No internet service,No internet service,No internet service,Two year,No,Bank transfer (automatic),23.4,No\n4482-EWFMI,0,No,No,2,Yes,No,Fiber optic,No,No,No,No,No,No,Month-to-month,Yes,Electronic check,69.7,No\n6402-ZFPPI,1,No,No,25,Yes,Yes,Fiber optic,Yes,Yes,No,No,Yes,Yes,Month-to-month,Yes,Mailed check,102.8,Yes\n7594-LZNWR,1,No,No,34,Yes,No,Fiber optic,No,No,No,No,No,No,Month-to-month,No,Credit card (automatic),69.15,No\n8329-UTMVM,1,No,No,27,Yes,Yes,Fiber optic,No,Yes,No,Yes,Yes,Yes,One year,Yes,Bank transfer (automatic),104.65,No\n6900-RBKER,0,No,No,52,Yes,Yes,Fiber optic,No,No,Yes,No,No,Yes,Two year,Yes,Credit card (automatic),89.45,No\n6024-RUGGH,0,Yes,Yes,72,Yes,Yes,No,No internet service,No internet service,No internet service,No internet service,No internet service,No internet service,Two year,Yes,Bank transfer (automatic),25.2,No\n7328-ZJAJO,0,Yes,Yes,59,Yes,No,No,No internet service,No internet service,No internet service,No internet service,No internet service,No internet service,Two year,No,Credit card (automatic),19.5,No\n8212-CRQXP,0,Yes,No,22,Yes,No,Fiber optic,No,No,No,No,Yes,No,Month-to-month,Yes,Credit card (automatic),80.0,No\n0533-UCAAU,1,Yes,No,57,Yes,Yes,DSL,No,Yes,Yes,No,Yes,No,One year,Yes,Credit card (automatic),71.1,No\n8731-WBBMB,0,Yes,No,26,Yes,No,DSL,No,Yes,Yes,Yes,Yes,Yes,Month-to-month,No,Bank transfer (automatic),81.9,No\n9374-YOLBJ,0,Yes,Yes,1,Yes,No,No,No internet service,No internet service,No internet service,No internet service,No internet service,No internet service,Month-to-month,No,Electronic check,19.25,No\n";
+
+const LABELS = {
+  Contract:{"Month-to-month":"Month-to-month","One year":"1 year","Two year":"2 years"},
+  InternetService:{"DSL":"DSL","Fiber optic":"Fibre optic","No":"None"},
+  PaymentMethod:{"Electronic check":"Electronic cheque (manual)","Mailed check":"Mailed cheque","Bank transfer (automatic)":"Bank transfer (auto-pay)","Credit card (automatic)":"Credit card (auto-pay)"}
+};
+const NICE = {tenure:"Tenure",MonthlyCharges:"Monthly charge",Contract:"Contract term",InternetService:"Internet service",PaymentMethod:"Payment method",
+  PaperlessBilling:"Paperless billing",OnlineSecurity:"Online security",OnlineBackup:"Online backup",DeviceProtection:"Device protection",TechSupport:"Tech support",
+  StreamingTV:"Streaming TV",StreamingMovies:"Streaming movies",PhoneService:"Phone service",MultipleLines:"Multiple lines",SeniorCitizen:"Senior citizen",Partner:"Partner",Dependents:"Dependents"};
+const CATS = Object.keys(M.levels);
+const BANDS = [
+  {n:"Low",lo:0,hi:.30,c:"--low",bg:"--low-bg",call:"Stable. Maintain standard service; no intervention needed."},
+  {n:"Moderate",lo:.30,hi:.55,c:"--mod",bg:"--mod-bg",call:"Watch list. Add to proactive engagement in the next cycle."},
+  {n:"High",lo:.55,hi:.75,c:"--high",bg:"--high-bg",call:"Likely to churn. Contact within 14 days with a targeted offer."},
+  {n:"Critical",lo:.75,hi:1.01,c:"--crit",bg:"--crit-bg",call:"Imminent churn risk. Escalate to the retention team within 48 hours."}
+];
+const bandOf = p => BANDS.find(b => p>=b.lo && p<b.hi);
+const pct = (x,d=0) => (x*100).toFixed(d);
+
+/* ---------- model ---------- */
+function normalize(r){
+  const o = {...r};
+  o.tenure = Math.max(1, Math.min(72, +o.tenure||1));
+  o.MonthlyCharges = +o.MonthlyCharges||0;
+  if (o.SeniorCitizen==="1"||o.SeniorCitizen===1) o.SeniorCitizen="Yes";
+  if (o.SeniorCitizen==="0"||o.SeniorCitizen===0) o.SeniorCitizen="No";
+  for (const c of CATS){
+    let v = o[c]; if (v==="No internet service"||v==="No phone service") v="No";
+    if (!M.levels[c].includes(v)) v = M.baseline[c];
+    o[c]=v;
+  }
+  if (o.InternetService==="No") ["OnlineSecurity","OnlineBackup","DeviceProtection","TechSupport","StreamingTV","StreamingMovies"].forEach(k=>o[k]="No");
+  if (o.PhoneService==="No") o.MultipleLines="No";
+  return o;
+}
+function features(o){
+  const x = {tenure:o.tenure, MonthlyCharges:o.MonthlyCharges, log_tenure:Math.log1p(o.tenure)};
+  for (const c of CATS) for (const l of M.levels[c]) if (l!==M.baseline[c]) x[`${c}=${l}`] = o[c]===l?1:0;
+  return x;
+}
+function score(r){
+  const o = normalize(r), x = features(o);
+  let z = M.intercept; const contrib = {};
+  for (const k in M.coef){
+    z += M.coef[k]*x[k];
+    const g = k.includes("=") ? k.split("=")[0] : (k==="log_tenure"?"tenure":k);
+    contrib[g] = (contrib[g]||0) + M.coef[k]*(x[k]-M.means[k]);
+  }
+  return {p:1/(1+Math.exp(-z)), o, contrib};
+}
+
+/* ---------- retention playbook ---------- */
+function actions(o, contrib){
+  const a = [];
+  const add = (key, tag, title, body) => a.push({w:contrib[key]||0, tag, title, body});
+  if (o.Contract==="Month-to-month") add("Contract","CONTRACT","Offer a 12- or 24-month plan","Pair a term commitment with a loyalty discount or device upgrade. Month-to-month customers churn at "+pct(MET.segments.Contract["Month-to-month"])+"% vs "+pct(MET.segments.Contract["Two year"])+"% on two-year terms.");
+  else if (o.Contract==="One year") add("Contract","RENEWAL","Lock in renewal early","Approach before the anniversary with a two-year upgrade offer.");
+  if (o.tenure<=12) add("tenure","ONBOARD","Run early-life care","First-year customers are the most fragile. Schedule a welcome check-in and confirm the service meets expectations.");
+  if (o.PaymentMethod==="Electronic check") add("PaymentMethod","BILLING","Move to auto-pay","Offer a small monthly credit for switching to bank or card auto-pay. Manual e-cheque payers churn at "+pct(MET.segments.PaymentMethod["Electronic check"])+"%.");
+  if (o.InternetService!=="No" && o.TechSupport==="No") add("TechSupport","SUPPORT","Add premium tech support","Offer a 3-month free trial. Customers with tech support churn at about half the rate.");
+  if (o.InternetService!=="No" && o.OnlineSecurity==="No") add("OnlineSecurity","BUNDLE","Bundle online security","Include online security in a value bundle; it raises perceived value and switching cost.");
+  if (o.InternetService==="Fiber optic") add("InternetService","QUALITY","Review fibre service quality","Check recent outages, speed tests and support tickets. Fibre customers churn at "+pct(MET.segments.InternetService["Fiber optic"])+"%, often over price or reliability.");
+  if (o.MonthlyCharges>=80) add("MonthlyCharges","PRICING","Right-size the plan","Review usage against the bill. A plan that fits usage, or a bundle discount, removes the main reason to shop around.");
+  if (o.SeniorCitizen==="Yes") add("SeniorCitizen","CARE","Offer assisted support","Provide a named contact or priority phone line and simplify the bill.");
+  if (o.PaperlessBilling==="Yes" && (contrib.PaperlessBilling||0)>0) add("PaperlessBilling","ENGAGE","Strengthen digital engagement","E-bill customers see fewer touchpoints. Use app notifications to share usage and value summaries.");
+  a.sort((x,y)=>y.w-x.w);
+  if (!a.length) a.push({tag:"MAINTAIN",title:"Maintain and reward",body:"Low-risk profile. Keep service quality high and consider a referral or loyalty reward."});
+  return a;
+}
+
+/* ---------- form ---------- */
+const $ = s => document.querySelector(s);
+const DEFAULT = {tenure:8,Contract:"Month-to-month",MonthlyCharges:89.1,PhoneService:"Yes",MultipleLines:"Yes",InternetService:"Fiber optic",
+  OnlineSecurity:"No",OnlineBackup:"No",DeviceProtection:"Yes",TechSupport:"No",StreamingTV:"Yes",StreamingMovies:"No",
+  PaymentMethod:"Electronic check",PaperlessBilling:"Yes",SeniorCitizen:"No",Partner:"No",Dependents:"No"};
+const PRESETS = {
+  atrisk:DEFAULT,
+  mid:{tenure:30,Contract:"One year",MonthlyCharges:64.5,PhoneService:"Yes",MultipleLines:"No",InternetService:"DSL",OnlineSecurity:"Yes",OnlineBackup:"No",DeviceProtection:"No",TechSupport:"No",StreamingTV:"Yes",StreamingMovies:"No",PaymentMethod:"Mailed check",PaperlessBilling:"Yes",SeniorCitizen:"No",Partner:"Yes",Dependents:"No"},
+  loyal:{tenure:64,Contract:"Two year",MonthlyCharges:84.3,PhoneService:"Yes",MultipleLines:"Yes",InternetService:"DSL",OnlineSecurity:"Yes",OnlineBackup:"Yes",DeviceProtection:"Yes",TechSupport:"Yes",StreamingTV:"No",StreamingMovies:"Yes",PaymentMethod:"Credit card (automatic)",PaperlessBilling:"No",SeniorCitizen:"No",Partner:"Yes",Dependents:"Yes"},
+  reset:{tenure:12,Contract:"Month-to-month",MonthlyCharges:65,PhoneService:"Yes",MultipleLines:"No",InternetService:"DSL",OnlineSecurity:"No",OnlineBackup:"No",DeviceProtection:"No",TechSupport:"No",StreamingTV:"No",StreamingMovies:"No",PaymentMethod:"Bank transfer (automatic)",PaperlessBilling:"No",SeniorCitizen:"No",Partner:"No",Dependents:"No"}
+};
+const ORDER = {Contract:["Month-to-month","One year","Two year"],InternetService:["Fiber optic","DSL","No"],PaymentMethod:["Electronic check","Mailed check","Bank transfer (automatic)","Credit card (automatic)"]};
+document.querySelectorAll(".seg").forEach(seg=>{
+  const name = seg.dataset.name, opts = ORDER[name] || ["Yes","No"];
+  seg.setAttribute("role","radiogroup");
+  seg.innerHTML = opts.map((v,i)=>`<input type="radio" name="${name}" id="${name}_${i}" value="${v}"><label for="${name}_${i}">${(LABELS[name]&&LABELS[name][v])||v}</label>`).join("");
+});
+$("#PaymentMethod").innerHTML = ORDER.PaymentMethod.map(v=>`<option value="${v}">${LABELS.PaymentMethod[v]}</option>`).join("");
+
+function setForm(v){
+  $("#tenure").value = $("#tenure_r").value = v.tenure;
+  $("#MonthlyCharges").value = $("#mc_r").value = v.MonthlyCharges;
+  $("#PaymentMethod").value = v.PaymentMethod;
+  for (const k in v){ const el = document.querySelector(`input[name="${k}"][value="${v[k]}"]`); if (el) el.checked = true; }
+  update();
+}
+function readForm(){
+  const r = {tenure:+$("#tenure").value, MonthlyCharges:+$("#MonthlyCharges").value, PaymentMethod:$("#PaymentMethod").value};
+  document.querySelectorAll(".seg").forEach(s=>{ const c = s.querySelector("input:checked"); r[s.dataset.name] = c?c.value:"No"; });
+  return r;
+}
+function syncDeps(){
+  const net = document.querySelector('input[name="InternetService"]:checked')?.value !== "No";
+  const phone = document.querySelector('input[name="PhoneService"]:checked')?.value === "Yes";
+  document.querySelectorAll('[data-dep]').forEach(q=>{
+    const on = q.dataset.dep==="net" ? net : phone;
+    q.dataset.off = on?"0":"1";
+    q.querySelectorAll("input").forEach(i=>{ i.disabled = !on; if(!on && i.value==="No") i.checked = true; });
+  });
+}
+let last = null;
+function update(){
+  syncDeps();
+  const r = readForm(), s = score(r), b = bandOf(s.p); last = {r,s,b};
+  const vb = $("#vband"); vb.style.setProperty("--band",`var(${b.c})`); vb.style.setProperty("--band-bg",`var(${b.bg})`);
+  $("#vpill").style.background = `var(${b.c})`;
+  $("#vprob").innerHTML = `${pct(s.p)}<span>%</span>`;
+  $("#vpill").textContent = b.n+" risk";
+  $("#vneedle").style.left = Math.min(99.5,s.p*100)+"%";
+  $("#vbase").style.left = (M.base_rate*100)+"%";
+  $("#vcall").textContent = b.call;
+  const bs = MET.bands.find(x=>x.band===b.n);
+  const flag = s.p >= M.threshold;
+  $("#vkv").innerHTML = `
+    <span>Model classification</span><b style="color:var(${flag?'--crit':'--low'})">${flag?"Churn":"Retain"}</b>
+    <span>Relative to average customer</span><b>${(s.p/M.base_rate).toFixed(1)}×</b>
+    <span>Observed churn in ${b.n} band</span><b>${pct(bs.actual_churn)}%</b>
+    <span>Decision threshold</span><b>${pct(M.threshold)}%</b>`;
+  const items = Object.entries(s.contrib).filter(([,v])=>Math.abs(v)>0.03).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,7);
+  const mx = Math.max(1.2, ...items.map(i=>Math.abs(i[1])));
+  $("#vdrv").innerHTML = items.map(([k,v])=>{
+    const w = Math.abs(v)/mx*50, left = v>0?50:50-w;
+    const val = k==="tenure"?`${s.o.tenure} mo`:k==="MonthlyCharges"?`$${s.o.MonthlyCharges.toFixed(0)}`:((LABELS[k]&&LABELS[k][s.o[k]])||s.o[k]);
+    return `<span>${NICE[k]}: <b style="font-weight:600">${val}</b></span><div class="bar" title="${v>0?'raises':'lowers'} risk"><s style="left:${left}%;width:${w}%;background:var(${v>0?'--crit':'--low'})"></s></div>`;
+  }).join("") || `<span class="note">Profile is close to average.</span>`;
+  const acts = actions(s.o, s.contrib);
+  $("#vacts").innerHTML = acts.slice(0,4).map(a=>`<li><em>${a.tag}</em><div><strong>${a.title}</strong><span>${a.body}</span></div></li>`).join("");
+  $("#copyMsg").textContent = "";
+}
+$("#f").addEventListener("input", e=>{
+  const t = e.target;
+  if (t.id==="tenure_r") $("#tenure").value=t.value;
+  if (t.id==="tenure") $("#tenure_r").value=t.value;
+  if (t.id==="mc_r") $("#MonthlyCharges").value=t.value;
+  if (t.id==="MonthlyCharges") $("#mc_r").value=t.value;
+  update();
+});
+$("#f").addEventListener("submit", e=>e.preventDefault());
+document.querySelectorAll("[data-preset]").forEach(b=>b.addEventListener("click",()=>setForm(PRESETS[b.dataset.preset])));
+
+async function copyText(txt, msgEl, ok){
+  try { await navigator.clipboard.writeText(txt); msgEl.textContent = ok; }
+  catch(e){ const ta=document.createElement("textarea"); ta.value=txt; ta.style.width="100%"; ta.rows=6; msgEl.textContent="Copy is blocked here. Select the text below and copy it manually."; msgEl.appendChild(ta); ta.select(); }
+}
+$("#copySum").addEventListener("click",()=>{
+  const {r,s,b} = last; const acts = actions(s.o,s.contrib).slice(0,3);
+  const t = `CHURN RISK ASSESSMENT\nRisk: ${pct(s.p,1)}% (${b.n}) | Classification: ${s.p>=M.threshold?"Churn":"Retain"}\nProfile: ${r.tenure} months, ${r.Contract}, ${r.InternetService} internet, $${(+r.MonthlyCharges).toFixed(2)}/mo, ${r.PaymentMethod}\nNext step: ${b.call}\nActions:\n${acts.map((a,i)=>`  ${i+1}. ${a.title}`).join("\n")}`;
+  copyText(t, $("#copyMsg"), "Summary copied. Paste it into the CRM case notes.");
+});
+
+/* ---------- batch ---------- */
+function parseCSV(text){
+  const rows=[]; let row=[], f="", q=false;
+  for (let i=0;i<text.length;i++){
+    const c=text[i];
+    if (q){ if(c==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if (c==='"') q=true; else if (c===','){row.push(f);f="";} else if (c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n')i++; row.push(f); rows.push(row); row=[]; f=""; }
+    else f+=c;
+  }
+  if (f!==""||row.length){row.push(f);rows.push(row);}
+  const h = rows.shift().map(s=>s.trim());
+  return rows.filter(r=>r.length>1).map(r=>Object.fromEntries(h.map((k,i)=>[k,(r[i]||"").trim()])));
+}
+let batch = [], sortK = "p", sortDir = -1;
+function runBatch(recs, label){
+  const need = ["tenure","Contract","MonthlyCharges"];
+  if (!recs.length || need.some(k=>!(k in recs[0]))) { $("#batchMsg").textContent = `This file is missing required columns (${need.join(", ")}). Use the Telco dataset column names.`; return; }
+  batch = recs.map((r,i)=>{ const s=score(r), b=bandOf(s.p), a=actions(s.o,s.contrib);
+    const top = Object.entries(s.contrib).sort((x,y)=>y[1]-x[1])[0];
+    return {id:r.customerID||`Row ${i+1}`, p:s.p, band:b.n, bandObj:b, tenure:s.o.tenure, Contract:s.o.Contract, mc:s.o.MonthlyCharges,
+      driver: top && top[1]>0 ? NICE[top[0]] : "—", action:a[0].title, actual:r.Churn||""}; });
+  $("#batchMsg").textContent = `${label}: ${batch.length} customers scored.`;
+  renderBatch();
+}
+function renderBatch(){
+  const n = batch.length;
+  $("#bcards").innerHTML = BANDS.map(b=>{ const g = batch.filter(x=>x.band===b.n); const rev = g.reduce((s,x)=>s+x.mc,0);
+    return `<div class="card" style="--band:var(${b.c})"><small>${b.n}</small><b>${g.length}</b><span>${n?pct(g.length/n):0}% of list · $${rev.toFixed(0)}/mo revenue</span></div>`; }).join("");
+  const rows = [...batch].sort((a,b)=>{ const x=a[sortK], y=b[sortK]; return (x>y?1:x<y?-1:0)*sortDir; });
+  $("#btable tbody").innerHTML = rows.map(r=>`<tr><td style="font-family:var(--f-mono)">${r.id}</td><td class="num">${pct(r.p,1)}%</td>
+    <td><span class="tag" style="--b:var(${r.bandObj.c});--b-bg:var(${r.bandObj.bg})">${r.band}</span></td><td class="num">${r.tenure}</td>
+    <td>${LABELS.Contract[r.Contract]}</td><td class="num">${r.mc.toFixed(2)}</td><td>${r.driver}</td><td>${r.action}</td><td>${r.actual?(r.actual==="Yes"?"Churned":"Stayed"):"—"}</td></tr>`).join("");
+}
+document.querySelectorAll("#btable th").forEach(th=>th.addEventListener("click",()=>{ const k=th.dataset.k; sortDir = sortK===k?-sortDir:(k==="p"||k==="mc"||k==="tenure"?-1:1); sortK=k; renderBatch(); }));
+function readFile(file){ const fr=new FileReader(); fr.onload=()=>{ try{ runBatch(parseCSV(fr.result), file.name); }catch(e){ $("#batchMsg").textContent="Could not read this file. Check that it is a comma-separated CSV with a header row."; } }; fr.readAsText(file); }
+$("#csv").addEventListener("change",e=>{ if(e.target.files[0]) readFile(e.target.files[0]); });
+const drop=$("#drop");
+["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("on");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,()=>drop.classList.remove("on")));
+drop.addEventListener("drop",e=>{e.preventDefault(); if(e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]);});
+$("#loadSample").addEventListener("click",()=>runBatch(parseCSV(SAMPLE),"Sample from dataset"));
+$("#copyCsv").addEventListener("click",()=>{
+  const t = ["customerID,churn_probability,risk_band,top_driver,recommended_action", ...[...batch].sort((a,b)=>b.p-a.p).map(r=>`${r.id},${r.p.toFixed(4)},${r.band},${r.driver},"${r.action}"`)].join("\n");
+  copyText(t, $("#batchMsg"), "Scored results copied as CSV. Paste into a spreadsheet.");
+});
+
+/* ---------- model tab ---------- */
+(function(){
+  const m = MET.models, op = MET.op;
+  const box = (h, inner) => `<div class="verdict" style="position:static"><div class="v-sec"><h3>${h}</h3>${inner}</div></div>`;
+  const perf = `<div class="kv">${Object.entries(m).map(([k,v])=>`<span>${k}${k==="Logistic Regression"?" (deployed)":""}</span><b>AUC ${v.test_auc.toFixed(3)}</b>`).join("")}</div>
+    <p class="note">Area under the ROC curve on a held-out 20% test set. Logistic regression matched or beat tree ensembles, and every factor it uses can be explained to a customer or auditor.</p>`;
+  const cm = `<div class="kv"><span>Threshold</span><b>${pct(op.threshold)}%</b><span>Accuracy</span><b>${pct(op.accuracy,1)}%</b>
+    <span>Recall (churners caught)</span><b>${pct(op.recall,1)}%</b><span>Precision (flags that were right)</span><b>${pct(op.precision,1)}%</b>
+    <span>F1 score</span><b>${op.f1.toFixed(3)}</b></div>
+    <p class="note">Out of ${op.tp+op.fn} test customers who left, the model flagged ${op.tp}. It also flagged ${op.fp} who stayed. The threshold is set below 50% because missing a churner usually costs more than an unneeded retention call.</p>`;
+  const bands = `<div class="kv">${MET.bands.map(b=>`<span>${b.band} (${pct(b.lo)}–${pct(b.hi)}%)</span><b>${pct(b.share)}% of base · ${pct(b.actual_churn)}% churned</b>`).join("")}</div>
+    <p class="note">Observed churn rises steadily across bands, so the bands can be used directly to prioritise outreach.</p>`;
+  const seg = MET.segments;
+  const segs = `<div class="kv">
+    <span>Month-to-month contract</span><b>${pct(seg.Contract["Month-to-month"])}%</b><span>Two-year contract</span><b>${pct(seg.Contract["Two year"])}%</b>
+    <span>Tenure 0–6 months</span><b>${pct(seg.tenure_band["0-6"])}%</b><span>Tenure 49–72 months</span><b>${pct(seg.tenure_band["49-72"])}%</b>
+    <span>Fibre optic internet</span><b>${pct(seg.InternetService["Fiber optic"])}%</b><span>Electronic cheque payers</span><b>${pct(seg.PaymentMethod["Electronic check"])}%</b>
+    <span>No tech support</span><b>${pct(seg.TechSupport["No"])}%</b><span>All customers</span><b>${pct(MET.churn_rate,1)}%</b></div>
+    <p class="note">Churn rates by segment in the full dataset.</p>`;
+  $("#modelgrid").innerHTML = box("Model comparison",perf)+box("Performance at operating threshold",cm)+box("Risk band calibration",bands)+box("Highest-risk segments",segs);
+})();
+
+/* ---------- tabs ---------- */
+const TABS = ["single","batch","model"];
+function show(name){ TABS.forEach(t=>{ $("#tab-"+t).setAttribute("aria-selected", t===name); $("#view-"+t).hidden = t!==name; }); if(name==="batch"&&!batch.length) runBatch(parseCSV(SAMPLE),"Sample from dataset"); }
+TABS.forEach(t=>$("#tab-"+t).addEventListener("click",()=>show(t)));
+setForm(DEFAULT);
+</script>
+
+</body>
+</html>
